@@ -1,0 +1,36 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { quizzes } from '../../data/quizzes';
+export function getStaticPaths() { return quizzes.map(quiz => ({ params: { slug: quiz.slug }, props: { quiz } })); }
+const { quiz } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+<BaseLayout title={`${quiz.title} | Quizroo`} description={quiz.description}><div class="container"><section class="quiz-shell"><a class="muted" href={`${base}/`}>← All quizzes</a><p class="eyebrow" style="margin-top:28px">{quiz.icon} {quiz.category}</p><h1>{quiz.title}</h1><p class="muted">{quiz.description}</p><div id="quiz-app" data-quiz={JSON.stringify(quiz)}><p class="muted">Loading quiz…</p></div></section></div></BaseLayout>
+<script>
+  import type { Quiz } from '../../data/quizzes';
+  const root = document.querySelector<HTMLElement>('#quiz-app');
+  if (root) {
+    const quiz: Quiz = JSON.parse(root.dataset.quiz || '{}');
+    const answers: (string | null)[] = Array(quiz.questions.length).fill(null);
+    let step = 0;
+    const escapeHtml = (s: string) => s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c] || c));
+    function render() {
+      const q = quiz.questions[step];
+      root!.innerHTML = `<p class="muted">Question ${step + 1} of ${quiz.questions.length}</p><div class="progress"><div style="width:${(step + 1) / quiz.questions.length * 100}%"></div></div><h2>${escapeHtml(q.prompt)}</h2><div class="choices">${q.options.map((opt,i)=>`<button class="choice ${answers[step]===opt.value?'selected':''}" data-option="${i}" aria-pressed="${answers[step]===opt.value}">${escapeHtml(opt.label)}</button>`).join('')}</div><div class="quiz-actions"><button class="button secondary" id="back" ${step===0?'disabled':''}>← Back</button><button class="button" id="next" ${answers[step]===null?'disabled':''}>${step===quiz.questions.length-1?'See my result':'Next →'}</button></div>`;
+      root!.querySelectorAll<HTMLButtonElement>('[data-option]').forEach(btn => btn.addEventListener('click', () => {answers[step] = q.options[Number(btn.dataset.option)].value;render();}));
+      root!.querySelector('#back')?.addEventListener('click',()=>{if(step>0){step--;render();}});
+      root!.querySelector('#next')?.addEventListener('click',()=>{if(answers[step]===null)return;if(step<quiz.questions.length-1){step++;render();}else{showResult();}});
+    }
+    function showResult() {
+      const counts: Record<string,number> = {};
+      answers.forEach(a=>{if(a)counts[a]=(counts[a]||0)+1;});
+      const isKnowledge = quiz.category==='Knowledge';
+      const score=counts.correct||0;
+      const key=isKnowledge?(score>=3?'correct':'wrong'):Object.keys(quiz.results).sort((a,b)=>(counts[b]||0)-(counts[a]||0))[0];
+      const result=quiz.results[key];
+      root!.innerHTML=`<div style="text-align:center;padding:30px 0"><div style="font-size:3rem">🎉</div><p class="eyebrow">Your result</p><h2>${escapeHtml(result.title)}</h2><p class="lead">${escapeHtml(result.description.replace('{score}',String(score)).replace('{total}',String(quiz.questions.length)))}</p><div style="margin-top:30px"><button class="button" id="restart">Try again ↻</button></div></div>`;
+      root!.querySelector('#restart')?.addEventListener('click',()=>{answers.fill(null);step=0;render();});
+    }
+    render();
+  }
+</script>
