@@ -1,0 +1,8 @@
+---
+import '../styles/global.css';
+const { title = 'Quizroo — Discover something new', description = 'Fun quizzes, personality explorations, and brain challenges.' } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><meta name="description" content={description}/><link rel="icon" href={`${base}/favicon.svg`}/><title>{title}</title></head>
+<body><header class="site-header"><nav class="container nav"><a class="brand" href={`${base}/`}>✦ Quizroo</a><a href={`${base}/#quizzes`}>Explore quizzes →</a></nav></header><main><slot /></main><footer class="footer"><div class="container">© {new Date().getFullYear()} Quizroo · Just for fun. No account required.</div></footer></body></html>
