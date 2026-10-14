@@ -1,0 +1,6 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { quizzes } from '../data/quizzes';
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+<BaseLayout><section class="hero container"><span class="eyebrow">Curiosity starts here</span><h1>Small quizzes.<br/><span style="color:#6651e9">Big discoveries.</span></h1><p class="lead">Explore your personality, challenge your brain, and enjoy a few minutes of discovery. Free, instant, and no sign-up required.</p></section><section class="container" id="quizzes"><h2>Pick your next quiz ✨</h2><div class="grid">{quizzes.map(quiz=><a class="card" href={`${base}/quiz/${quiz.slug}/`}><span class="card-icon">{quiz.icon}</span><div style="margin-top:18px"><span class="pill">{quiz.category}</span></div><h3>{quiz.title}</h3><p>{quiz.description}</p><span style="color:#6550e8;font-weight:750">Start quiz →</span></a>)}</div></section></BaseLayout>
